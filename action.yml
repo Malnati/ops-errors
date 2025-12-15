@@ -1,4 +1,4 @@
-# Malnati/ops-errors@v1.0.0
+# Malnati/ops-errors@v1.0.1
 name: "Ops Errors"
 description: "Centralizes file error writing and exposes Bash functions via BASH_ENV."
 branding:
@@ -14,7 +14,7 @@ inputs:
 outputs:
   errors_path:
     description: "Effective path of the error log file."
-    value: ${{ steps.setup.outputs.errors }}
+    value: ${{ steps.setup.outputs.errors_path }}
   bash_env:
     description: "File configured in BASH_ENV for auto-source."
     value: ${{ steps.setup.outputs.bash_env }}
