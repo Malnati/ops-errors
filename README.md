@@ -6,9 +6,12 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Malnati/ops-errors/actions/workflows/ci.yml">
-    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Malnati/ops-errors/ci.yml?branch=main" />
+  <a href="https://github.com/marketplace/actions/ops-errors">
+    <img alt="ops-errors" src="assets/ops-errors-splash-large.png" />
   </a>
+</p>
+
+<p align="center">
   <a href="https://github.com/Malnati/ops-errors/releases">
     <img alt="Release" src="https://img.shields.io/github/v/release/Malnati/ops-errors" />
   </a>
@@ -29,6 +32,12 @@
 <hr />
 
 <h2>What it does</h2>
+
+<p align="center">
+  <a href="https://github.com/marketplace/actions/ops-errors">
+    <img alt="ops-errors" src="assets/ops-errors-whatisit-large.png" />
+  </a>
+</p>
 
 <ul>
   <li>Creates (or ensures) an error log file on disk.</li>
