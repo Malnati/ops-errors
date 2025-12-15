@@ -162,6 +162,13 @@
         box-shadow:var(--shadow);
         overflow:hidden;
       }
+      .imagecard{
+        border:1px solid rgba(35,48,74,.7);
+        border-radius:var(--radius);
+        background:rgba(8,13,25,.65);
+        box-shadow:var(--shadow);
+        overflow:hidden;
+      }
       .codehead{
         display:flex;align-items:center;justify-content:space-between;gap:12px;
         padding:12px 14px;
@@ -201,6 +208,13 @@
         color:#eaf1ff;
       }
       code{font-family:var(--mono)}
+      .imagecard img{display:block;width:100%;height:220px;object-fit:cover}
+      .imagecard .caption{padding:12px 14px;margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+      .image-grid{margin-top:18px;display:grid;grid-template-columns:repeat(2, 1fr);gap:12px}
+      @media (max-width: 920px){ .image-grid{grid-template-columns:1fr} }
+      .imgtile{border:1px solid rgba(35,48,74,.7);border-radius:18px;overflow:hidden;background:rgba(15,23,42,.35);box-shadow:var(--shadow)}
+      .imgtile img{display:block;width:100%;height:200px;object-fit:cover}
+      .imgtile p{margin:10px 12px;color:var(--muted);font-size:13.5px;line-height:1.55}
       .section{margin-top:18px}
       .section h2{margin:0 0 10px;font-size:18px}
       .section p{margin:0;color:var(--muted);line-height:1.65;font-size:14px}
@@ -359,6 +373,17 @@
               </div>
             </div>
 
+            <div class="image-grid" aria-label="ops-errors visuals">
+              <div class="imgtile">
+                <img src="../assets/ops-errors-whatisit-medium.png" alt="Screenshot showing the ops-errors explanation layout" />
+                <p>See what ops-errors looks like when describing how it captures and preserves stderr.</p>
+              </div>
+              <div class="imgtile">
+                <img src="../assets/ops-errors-avatar-medium.png" alt="ops-errors badge used for identity" />
+                <p>The ops-errors badge keeps the brand consistent across Marketplace and repository listings.</p>
+              </div>
+            </div>
+
             <div class="section" style="margin-top:18px">
               <h2>How it works</h2>
               <p>
@@ -370,6 +395,11 @@
         </div>
 
         <div class="side">
+          <div class="imagecard">
+            <img src="../assets/ops-errors-splash-large.png" alt="ops-errors splash illustration highlighting centralized error logging" />
+            <p class="caption">Centralized error logging for GitHub Actions, packaged with auto-loaded Bash helpers.</p>
+          </div>
+
           <div class="codecard" id="quickstart">
             <div class="codehead">
               <div class="left">
