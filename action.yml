@@ -1,0 +1,36 @@
+# Malnati/ops-errors@v1.0.0
+name: "Ops Errors"
+description: "Centralizes file error writing and exposes Bash functions via BASH_ENV."
+branding:
+  icon: "alert-triangle"
+  color: "red"
+
+inputs:
+  errors:
+    description: "Error log file path."
+    required: false
+    default: ".github/workflows/errors.log"
+
+outputs:
+  errors_path:
+    description: "Effective path of the error log file."
+    value: ${{ steps.setup.outputs.errors }}
+  bash_env:
+    description: "File configured in BASH_ENV for auto-source."
+    value: ${{ steps.setup.outputs.bash_env }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: setup
+      shell: bash
+      env:
+        ERRORS_PATH: ${{ inputs.errors }}
+      run: |
+        set -euo pipefail
+        mkdir -p "$(dirname "$ERRORS_PATH")"
+        touch "$ERRORS_PATH" || true
+        echo "ERRORS_PATH=$ERRORS_PATH" >> "$GITHUB_ENV"
+        echo "BASH_ENV=$GITHUB_ACTION_PATH/scripts/lib.sh" >> "$GITHUB_ENV"
+        echo "errors_path=$ERRORS_PATH" >> "$GITHUB_OUTPUT"
+        echo "bash_env=$GITHUB_ACTION_PATH/scripts/lib.sh" >> "$GITHUB_OUTPUT"
