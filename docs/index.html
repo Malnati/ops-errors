@@ -1,0 +1,499 @@
+<!-- docs/index.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Malnati/ops-errors — Centralized error logging for GitHub Actions, with Bash helpers auto-loaded via BASH_ENV." />
+    <title>Malnati/ops-errors</title>
+
+    <style>
+      :root{
+        --bg0:#0b0f1a;
+        --bg1:#0f172a;
+        --card:#0b1224cc;
+        --border:#23304a;
+        --text:#e7eefc;
+        --muted:#b6c2dd;
+        --muted2:#8ea0c6;
+        --accent:#ef4444;
+        --accent2:#fb7185;
+        --ok:#22c55e;
+        --warn:#f59e0b;
+        --shadow: 0 20px 60px rgba(0,0,0,.45);
+        --radius: 18px;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      }
+
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{
+        margin:0;
+        font-family:var(--sans);
+        color:var(--text);
+        background:
+          radial-gradient(1200px 700px at 20% 15%, rgba(239,68,68,.20), rgba(0,0,0,0) 55%),
+          radial-gradient(1000px 700px at 85% 25%, rgba(59,130,246,.16), rgba(0,0,0,0) 60%),
+          radial-gradient(900px 600px at 55% 90%, rgba(251,113,133,.14), rgba(0,0,0,0) 55%),
+          linear-gradient(180deg, var(--bg0), var(--bg1));
+        overflow-x:hidden;
+      }
+
+      a{color:inherit;text-decoration:none}
+      .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 80px}
+
+      .topbar{
+        display:flex;align-items:center;justify-content:space-between;gap:14px;
+        padding:14px 16px;border:1px solid rgba(35,48,74,.7);
+        border-radius:999px;background:rgba(11,18,36,.45);backdrop-filter: blur(10px);
+      }
+
+      .brand{
+        display:flex;align-items:center;gap:10px;min-width:220px;
+      }
+      .logo{
+        width:38px;height:38px;border-radius:12px;
+        background:
+          radial-gradient(16px 16px at 30% 30%, rgba(255,255,255,.22), rgba(255,255,255,0) 65%),
+          linear-gradient(135deg, var(--accent), var(--accent2));
+        box-shadow: 0 12px 30px rgba(239,68,68,.22);
+        display:grid;place-items:center;
+      }
+      .logo svg{opacity:.95}
+      .brand h1{font-size:14px;line-height:1.1;margin:0}
+      .brand p{font-size:12px;margin:0;color:var(--muted2)}
+      .actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+
+      .btn{
+        display:inline-flex;align-items:center;gap:10px;
+        padding:10px 12px;border-radius:999px;
+        border:1px solid rgba(35,48,74,.9);
+        background:rgba(15,23,42,.55);
+        color:var(--text);
+        transition:transform .15s ease, border-color .15s ease, background .15s ease;
+        font-size:13px;
+      }
+      .btn:hover{transform:translateY(-1px);border-color:rgba(239,68,68,.55);background:rgba(15,23,42,.72)}
+      .btn.primary{
+        border-color:rgba(239,68,68,.35);
+        background:linear-gradient(135deg, rgba(239,68,68,.18), rgba(251,113,133,.10));
+      }
+      .btn svg{width:16px;height:16px;opacity:.92}
+
+      .hero{
+        margin-top:26px;
+        display:grid;
+        grid-template-columns: 1.15fr .85fr;
+        gap:18px;
+        align-items:stretch;
+      }
+      @media (max-width: 920px){
+        .hero{grid-template-columns:1fr}
+        .brand{min-width:unset}
+        .actions{justify-content:flex-start}
+      }
+
+      .panel{
+        border:1px solid rgba(35,48,74,.7);
+        border-radius:var(--radius);
+        background:rgba(11,18,36,.55);
+        box-shadow:var(--shadow);
+        overflow:hidden;
+      }
+      .panel .inner{padding:22px}
+      .kicker{
+        display:inline-flex;align-items:center;gap:10px;
+        padding:6px 10px;border-radius:999px;
+        border:1px solid rgba(35,48,74,.7);
+        background:rgba(15,23,42,.50);
+        color:var(--muted);
+        font-size:12px;
+      }
+      .kicker .dot{width:8px;height:8px;border-radius:999px;background:var(--accent)}
+      .title{
+        margin:14px 0 10px;
+        font-size:40px;
+        line-height:1.1;
+        letter-spacing:-0.02em;
+      }
+      @media (max-width: 520px){ .title{font-size:32px} }
+      .subtitle{
+        margin:0;
+        color:var(--muted);
+        font-size:15px;
+        line-height:1.6;
+        max-width:60ch;
+      }
+
+      .grid3{
+        margin-top:18px;
+        display:grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap:12px;
+      }
+      @media (max-width: 920px){ .grid3{grid-template-columns:1fr} }
+
+      .mini{
+        padding:14px;border-radius:16px;
+        border:1px solid rgba(35,48,74,.7);
+        background:rgba(15,23,42,.35);
+      }
+      .mini h3{margin:0 0 6px;font-size:14px}
+      .mini p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+      .tag{
+        display:inline-flex;align-items:center;gap:8px;
+        padding:6px 10px;border-radius:999px;
+        border:1px solid rgba(35,48,74,.7);
+        background:rgba(15,23,42,.45);
+        color:var(--muted);
+        font-size:12px;
+        margin-top:10px;
+      }
+      .tag strong{color:var(--text);font-weight:600}
+
+      .side{
+        display:flex;flex-direction:column;gap:12px;
+      }
+      .codecard{
+        border:1px solid rgba(35,48,74,.7);
+        border-radius:var(--radius);
+        background:rgba(8,13,25,.65);
+        box-shadow:var(--shadow);
+        overflow:hidden;
+      }
+      .codehead{
+        display:flex;align-items:center;justify-content:space-between;gap:12px;
+        padding:12px 14px;
+        border-bottom:1px solid rgba(35,48,74,.7);
+        background:rgba(15,23,42,.55);
+      }
+      .codehead .left{
+        display:flex;align-items:center;gap:10px;
+        color:var(--muted);
+        font-size:12px;
+      }
+      .pills{display:flex;gap:6px}
+      .pill{width:10px;height:10px;border-radius:999px;background:rgba(142,160,198,.35)}
+      .pill:nth-child(1){background:rgba(239,68,68,.55)}
+      .pill:nth-child(2){background:rgba(245,158,11,.55)}
+      .pill:nth-child(3){background:rgba(34,197,94,.55)}
+
+      .copy{
+        cursor:pointer;
+        padding:8px 10px;
+        border-radius:12px;
+        border:1px solid rgba(35,48,74,.8);
+        background:rgba(15,23,42,.55);
+        color:var(--muted);
+        font-size:12px;
+        transition: transform .15s ease, border-color .15s ease;
+      }
+      .copy:hover{transform:translateY(-1px);border-color:rgba(239,68,68,.55)}
+      .copy:active{transform:translateY(0)}
+      pre{
+        margin:0;
+        padding:14px;
+        overflow:auto;
+        font-family:var(--mono);
+        font-size:12.5px;
+        line-height:1.55;
+        color:#eaf1ff;
+      }
+      code{font-family:var(--mono)}
+      .section{margin-top:18px}
+      .section h2{margin:0 0 10px;font-size:18px}
+      .section p{margin:0;color:var(--muted);line-height:1.65;font-size:14px}
+
+      .features{
+        margin-top:18px;
+        display:grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap:12px;
+      }
+      @media (max-width: 920px){ .features{grid-template-columns:1fr} }
+
+      .feat{
+        padding:16px;border-radius:18px;
+        border:1px solid rgba(35,48,74,.7);
+        background:rgba(15,23,42,.35);
+        display:flex;gap:12px;align-items:flex-start;
+      }
+      .icon{
+        width:36px;height:36px;border-radius:14px;
+        background:linear-gradient(135deg, rgba(239,68,68,.18), rgba(251,113,133,.10));
+        border:1px solid rgba(239,68,68,.25);
+        display:grid;place-items:center;
+        flex:0 0 auto;
+      }
+      .feat h3{margin:0 0 6px;font-size:14px}
+      .feat p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.55}
+
+      .footer{
+        margin-top:26px;
+        padding:18px 16px;
+        border:1px solid rgba(35,48,74,.7);
+        border-radius:18px;
+        background:rgba(11,18,36,.45);
+        color:var(--muted2);
+        display:flex;align-items:center;justify-content:space-between;gap:12px;
+        flex-wrap:wrap;
+      }
+      .footer .links{display:flex;gap:10px;flex-wrap:wrap}
+      .footer a{
+        padding:8px 10px;border-radius:999px;
+        border:1px solid rgba(35,48,74,.7);
+        background:rgba(15,23,42,.35);
+        color:var(--muted);
+      }
+      .footer a:hover{border-color:rgba(239,68,68,.55)}
+      .badge{
+        display:inline-flex;align-items:center;gap:8px;
+        padding:8px 10px;border-radius:999px;
+        border:1px solid rgba(35,48,74,.7);
+        background:rgba(15,23,42,.35);
+        color:var(--muted);
+        font-size:12px;
+      }
+      .badge b{color:var(--text)}
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 2.6c.9 0 1.7.5 2.1 1.3l.5 1.1c.3.6.9 1 1.6 1.1l1.2.2c.9.2 1.6.9 1.8 1.8l.2 1.2c.1.7.5 1.3 1.1 1.6l1.1.5c.8.4 1.3 1.2 1.3 2.1s-.5 1.7-1.3 2.1l-1.1.5c-.6.3-1 .9-1.1 1.6l-.2 1.2c-.2.9-.9 1.6-1.8 1.8l-1.2.2c-.7.1-1.3.5-1.6 1.1l-.5 1.1c-.4.8-1.2 1.3-2.1 1.3s-1.7-.5-2.1-1.3l-.5-1.1c-.3-.6-.9-1-1.6-1.1l-1.2-.2c-.9-.2-1.6-.9-1.8-1.8l-.2-1.2c-.1-.7-.5-1.3-1.1-1.6l-1.1-.5C.5 15.7 0 14.9 0 14s.5-1.7 1.3-2.1l1.1-.5c.6-.3 1-.9 1.1-1.6l.2-1.2c.2-.9.9-1.6 1.8-1.8l1.2-.2c.7-.1 1.3-.5 1.6-1.1l.5-1.1C10.3 3.1 11.1 2.6 12 2.6Z" fill="rgba(255,255,255,.12)"/>
+              <path d="M8.6 14.2l2.1 2.1 4.7-5.1" stroke="rgba(255,255,255,.85)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <h1>Malnati/ops-errors</h1>
+            <p>Error logging helpers for GitHub Actions</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <a class="btn primary" href="https://github.com/marketplace/actions/ops-errors" target="_blank" rel="noreferrer">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 7.5c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2v9c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2v-9Z" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M8 9.5h8M8 12h6M8 14.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            Marketplace
+          </a>
+
+          <a class="btn" href="https://github.com/Malnati/ops-errors" target="_blank" rel="noreferrer">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 2C6.5 2 2 6.6 2 12.3c0 4.6 2.9 8.4 6.9 9.8.5.1.7-.2.7-.5v-1.8c-2.8.6-3.4-1.2-3.4-1.2-.5-1.2-1.2-1.5-1.2-1.5-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.2-.3-4.5-1.1-4.5-5 0-1.1.4-2.1 1-2.8-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1.1.8-.2 1.6-.3 2.4-.3.8 0 1.6.1 2.4.3 2-1.4 2.8-1.1 2.8-1.1.5 1.4.2 2.4.1 2.7.6.7 1 1.7 1 2.8 0 3.9-2.3 4.7-4.5 5 .4.3.7 1 .7 2v3c0 .3.2.6.7.5 4-1.4 6.9-5.2 6.9-9.8C22 6.6 17.5 2 12 2Z" fill="currentColor" opacity=".9"/>
+            </svg>
+            GitHub
+          </a>
+
+          <a class="btn" href="./README.html" onclick="return false" aria-disabled="true" title="Use the documentation file: docs/README.md">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M7 3h7l3 3v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M14 3v4h4" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M8 11h8M8 14h7M8 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            Docs
+          </a>
+        </div>
+      </div>
+
+      <div class="hero">
+        <div class="panel">
+          <div class="inner">
+            <span class="kicker"><span class="dot"></span> Composite Action • Bash helpers • File-based logging</span>
+
+            <h2 class="title">Stop repeating <br />error-handling functions.</h2>
+
+            <p class="subtitle">
+              <b>ops-errors</b> centralizes stderr capture and writes it to a single log file.
+              It auto-loads helpers for every subsequent <code>shell: bash</code> step using <code>BASH_ENV</code>.
+            </p>
+
+            <div class="grid3">
+              <div class="mini">
+                <h3>One log file</h3>
+                <p>Append timestamped stderr blocks into a single path on disk, consistent across steps.</p>
+                <div class="tag"><strong>ERRORS_PATH</strong> exported</div>
+              </div>
+              <div class="mini">
+                <h3>Zero duplication</h3>
+                <p>Functions are shipped once and automatically sourced for later bash steps.</p>
+                <div class="tag"><strong>BASH_ENV</strong> configured</div>
+              </div>
+              <div class="mini">
+                <h3>Simple wrappers</h3>
+                <p>Use <code>with_error_log</code> to capture stderr on failure and rethrow reliably.</p>
+                <div class="tag"><strong>with_error_log</strong> helper</div>
+              </div>
+            </div>
+
+            <div class="features">
+              <div class="feat">
+                <div class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+                    <path d="M12 2l7 4v8c0 5-3 8-7 9-4-1-7-4-7-9V6l7-4Z" stroke="currentColor" stroke-width="1.6" />
+                    <path d="M8.6 12.4l2 2 4.7-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3>Safe by default</h3>
+                  <p>Functions no-op if <code>ERRORS_PATH</code> is empty. Logs are append-only and resilient.</p>
+                </div>
+              </div>
+              <div class="feat">
+                <div class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+                    <path d="M12 3v6l4 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                    <path d="M21 12a9 9 0 1 1-9-9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3>Consistent formatting</h3>
+                  <p>Timestamp + context + captured stderr. Great for auditing composite actions and workflows.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="section" style="margin-top:18px">
+              <h2>How it works</h2>
+              <p>
+                Add <b>one</b> step at the beginning of your job. It creates the log file, exports <code>ERRORS_PATH</code>,
+                and points <code>BASH_ENV</code> to the action library. Every next bash step auto-sources it.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="side">
+          <div class="codecard" id="quickstart">
+            <div class="codehead">
+              <div class="left">
+                <div class="pills" aria-hidden="true"><span class="pill"></span><span class="pill"></span><span class="pill"></span></div>
+                <span>Quick start</span>
+              </div>
+              <button class="copy" data-copy="quickstart-code">Copy</button>
+            </div>
+            <pre><code id="quickstart-code">- name: "🧯 Setup error logging"
+  uses: Malnati/ops-errors@v1.0.0
+  with:
+    errors_path: .github/workflows/errors.log</code></pre>
+          </div>
+
+          <div class="codecard" id="usage">
+            <div class="codehead">
+              <div class="left">
+                <div class="pills" aria-hidden="true"><span class="pill"></span><span class="pill"></span><span class="pill"></span></div>
+                <span>Example usage</span>
+              </div>
+              <button class="copy" data-copy="usage-code">Copy</button>
+            </div>
+            <pre><code id="usage-code">- name: "❌ Logged failure (captures stderr)"
+  shell: bash
+  run: |
+    set -euo pipefail
+    with_error_log "demo: failing command" bash -lc 'echo "Boom" >&2; exit 1'
+
+- name: "📄 Preview error log"
+  shell: bash
+  run: |
+    set -euo pipefail
+    echo "ERRORS_PATH=$ERRORS_PATH"
+    test -f "$ERRORS_PATH"
+    head -n 80 "$ERRORS_PATH" || true</code></pre>
+          </div>
+
+          <div class="codecard" id="workflow">
+            <div class="codehead">
+              <div class="left">
+                <div class="pills" aria-hidden="true"><span class="pill"></span><span class="pill"></span><span class="pill"></span></div>
+                <span>Minimal workflow</span>
+              </div>
+              <button class="copy" data-copy="workflow-code">Copy</button>
+            </div>
+            <pre><code id="workflow-code">name: "Example - ops-errors"
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🧯 Setup error logging"
+        uses: Malnati/ops-errors@v1.0.0
+        with:
+          errors_path: .github/workflows/errors.log
+
+      - name: "🔍 GitHub CLI example"
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          with_error_log "gh: auth status" gh auth status</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="badge">
+          <b>Tip:</b> Use <code>shell: bash</code> for steps that rely on <code>BASH_ENV</code>.
+        </div>
+        <div class="links">
+          <a href="https://github.com/marketplace/actions/ops-errors" target="_blank" rel="noreferrer">Marketplace</a>
+          <a href="https://github.com/Malnati/ops-errors" target="_blank" rel="noreferrer">Repository</a>
+          <a href="https://github.com/Malnati/ops-errors/releases" target="_blank" rel="noreferrer">Releases</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        function copyText(text) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text);
+          }
+          var ta = document.createElement("textarea");
+          ta.value = text;
+          ta.setAttribute("readonly", "readonly");
+          ta.style.position = "absolute";
+          ta.style.left = "-9999px";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          return Promise.resolve();
+        }
+
+        function setBtnState(btn, label) {
+          btn.textContent = label;
+          btn.style.borderColor = "rgba(239,68,68,.55)";
+          setTimeout(function () {
+            btn.textContent = "Copy";
+            btn.style.borderColor = "rgba(35,48,74,.8)";
+          }, 900);
+        }
+
+        document.querySelectorAll("button.copy[data-copy]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var id = btn.getAttribute("data-copy");
+            var el = document.getElementById(id);
+            if (!el) return;
+            copyText(el.textContent).then(function () {
+              setBtnState(btn, "Copied");
+            });
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
