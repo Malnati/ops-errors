@@ -15,19 +15,24 @@ append_error_log() {
 }
 
 with_error_log() {
+  local ctx="${1:-command}"
+  shift || true
+
   if [ -z "${ERRORS_PATH:-}" ]; then
     "$@"
     return $?
   fi
-  local ctx="${1:-command}"
-  shift || true
+
   local err
   err="$(mktemp)"
-  if ! "$@" 2>"$err"; then
-    append_error_log "$ctx" "$err"
-    cat "$err" >&2
-    rm -f "$err"
-    return 1
+
+  if "$@" 2>"$err"; then
+    rm -f "$err" || true
+    return 0
   fi
-  rm -f "$err"
+
+  append_error_log "$ctx" "$err"
+  rm -f "$err" || true
+  echo "❌ Erro ao tentar executar: $ctx. Obtenha os logs completos em '$ERRORS_PATH'." >&2
+  return 1
 }
